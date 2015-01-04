@@ -7,43 +7,53 @@ import uk.co.stikman.serkit.scenario.SimpleScenario1;
 
 public class Main {
 
-	private static final int	SIZE	= 8;
+	private static final int	SIZE			= 7;
 	private static final int	GENERATION_SIZE	= 50;
 
-
 	public static void main(String[] args) {
-		Circuit c = new Circuit(SIZE);
-
-		Netlist nl = c.buildNetlist();
-		System.out.println(nl.toString());
-		for (BaseLogicUnit used : nl.getActiveCells())
-			System.out.println(used.getCode());
 
 		Mutator mutator = new BasicMutator();
 		Scenario scenario = new SimpleScenario1();
-		Simulator sim = new Simulator(c);
+		Simulator sim = new Simulator();
 		Generation previous = new Generation();
-		previous.add(c, 0.0f);
-		
-		Random rng = new Random();
-		
+		Random rng = new Random(0);
+
+		//
+		// Make a few completely random ones to seed it
+		//
+		for (int i = 0; i < 5; ++i) {
+			Circuit c = new Circuit(SIZE);
+			mutator.mutate(rng, c, 100000);
+			previous.add(c, 0.0f);
+			c.renumber();
+		}
+
+		int generationCount = 0;
 		long start = System.currentTimeMillis();
 		while (true) {
 			long d = System.currentTimeMillis();
-			if (d - start > 5000)
+			if (d - start > 50000)
 				break;
-			
-			previous.sort();
-			previous.keep(5);
-			
+
+			previous.sort(rng.nextInt(10) == 0);
+			previous.keep(2 + rng.nextInt(4));
+
+			++generationCount;
+			if (generationCount % 1000 == 0) {
+				System.out.println("Generation: " + generationCount + ".  Best: " + previous.get(0).getScore() + " / " +  previous.get(0).getCombinedScore());
+				Circuit c = previous.get(0).getCircuit();
+				c.renumber();
+				System.out.println(c);
+			}
+
 			//
 			// Create a new generation from the best of the previous one
 			//
 			Generation current = new Generation();
 			for (int i = 0; i < GENERATION_SIZE; ++i) {
-				c = new Circuit(previous.get(rng.nextInt(previous.size())).getCircuit());
-				mutator.mutate(c);
-				
+				Circuit c = new Circuit(previous.get(rng.nextInt(previous.size())).getCircuit());
+				mutator.mutate(rng, c, 10);
+
 				InputUnit inp = new InputUnit();
 				OutputUnit out = new OutputUnit(0);
 				c.setCell(SIZE - 1, SIZE / 2, out);
@@ -51,10 +61,13 @@ public class Main {
 				c.setInput(inp);
 				c.setOutput(out);
 
-				System.out.println(scenario.run(sim));
 				sim.setCircuit(c);
-				current.add(c, scenario.run(sim));
+				float f = scenario.run(sim);
+				current.add(c, f);
 			}
+
+			previous = current;
+
 		}
 	}
 

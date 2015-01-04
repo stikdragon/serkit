@@ -11,17 +11,15 @@ public class Simulator {
 	/**
 	 * @param circuit
 	 */
-	public Simulator(Circuit circuit) {
+	public Simulator() {
 		super();
-		this.circuit = circuit;
-		this.netlist = circuit.buildNetlist();
-		this.activeCells = netlist.getActiveCells();
 		step = 0;
-		setCircuit(circuit);
 	}
 
 	public void setCircuit(Circuit c) {
 		this.circuit = c;
+		this.netlist = circuit.buildNetlist();
+		this.activeCells = netlist.getActiveCells();
 		circuit.init();
 	}
 

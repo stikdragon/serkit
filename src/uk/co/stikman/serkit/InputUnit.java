@@ -21,16 +21,19 @@ public class InputUnit extends BaseLogicUnit {
 
 	@Override
 	public void clock() {
-		
+
 	}
 
 	public void setValue(float val) {
-		getPin(3).setValue(val);
+		getPin(1).setValue(val);
 	}
 
 	@Override
 	public Cell createClone() {
-		return new InputUnit(getRotation());
+		InputUnit r = new InputUnit();
+		r.copyFrom(this);
+		return r;
 	}
+
 
 }

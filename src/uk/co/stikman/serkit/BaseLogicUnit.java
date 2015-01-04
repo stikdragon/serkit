@@ -8,7 +8,7 @@ public abstract class BaseLogicUnit extends Cell {
 	public BaseLogicUnit() {
 		super();
 		for (int i = 0; i < 4; ++i)
-			pins[i] = new CellPin(this, i == 3, i);
+			pins[i] = new CellPin(this, i == 1, i);
 	}
 
 	public BaseLogicUnit(int rotate) {
@@ -24,6 +24,11 @@ public abstract class BaseLogicUnit extends Cell {
 		this.rotation = rotation;
 	}
 
+	/**
+	 * Pin 0, 2 and 3 are inputs, 1 is the output (east)
+	 * @param pin
+	 * @return
+	 */
 	public CellPin getPin(int pin) {
 		return pins[pin];
 	}
@@ -48,5 +53,14 @@ public abstract class BaseLogicUnit extends Cell {
 			if (!p.isOutput())
 				p.setValue(val);
 	}
+
+	@Override
+	public void copyFrom(Cell src) {
+		super.copyFrom(src);
+		BaseLogicUnit blu = (BaseLogicUnit) src;
+		this.id = blu.id;
+	}
+	
+	
 
 }

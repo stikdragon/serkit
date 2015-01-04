@@ -7,14 +7,12 @@ import java.util.Set;
 
 public class Circuit {
 	private int			size;
-
 	private Cell[]		cells;
-
 	private int			nextCellId;
-
 	private OutputUnit	output;
-
 	private InputUnit	input;
+	private boolean		rebuildComplexity	= true;
+	private float		complexity			= 0.0f;
 
 	/**
 	 * @param size
@@ -33,10 +31,10 @@ public class Circuit {
 		//
 		for (int i = 0; i < size * size; ++i) {
 			Cell c = copy.cells[i];
-			if (c != null) 
+			if (c != null)
 				cells[i] = c.createClone();
 		}
-
+		rebuildComplexity = true;
 	}
 
 	public int getSize() {
@@ -58,6 +56,9 @@ public class Circuit {
 
 	public void setCell(int x, int y, Cell c) {
 		cells[y * size + x] = c;
+		rebuildComplexity = true;
+		if (c == null)
+			return;
 		c.setX(x);
 		c.setY(y);
 		if (c instanceof BaseLogicUnit)
@@ -79,6 +80,42 @@ public class Circuit {
 			List<CellPin> list = new ArrayList<>();
 			follow(open, cur, list, null);
 			res.addList(list);
+		}
+
+		//
+		// A bit of a bodge, but cba to fix the above logic: find any logic 
+		// units which have another one adjacent to their outputs, these form
+		// their own little netlists (ie. connected components which don't 
+		// have a wire between them)
+		//
+		for (Cell c : cells) {
+			if (c == null || !(c instanceof BaseLogicUnit))
+				continue;
+			BaseLogicUnit blu = (BaseLogicUnit) c;
+			int dx = 0;
+			int dy = 0;
+			switch (blu.getRotation()) {
+				case 0:
+					dx = 1;
+					break;
+				case 1:
+					dy = 1;
+					break;
+				case 2:
+					dx = -1;
+					break;
+				case 3:
+					dy = -1;
+					break;
+			}
+			Cell c2 = getCell(c.getX() + dx, c.getY() + dy);
+			if (c2 != null && c2 instanceof BaseLogicUnit) {
+				BaseLogicUnit blu2 = (BaseLogicUnit) c2;
+				List<CellPin> list = new ArrayList<CellPin>();
+				list.add(blu.getPin(1));
+				list.add(blu2.getPin((blu.getRotation() + 3 + blu2.getRotation()) % 4));
+				res.addList(list);
+			}
 		}
 
 		//
@@ -119,7 +156,7 @@ public class Circuit {
 			// also the rotation of the cell to consider
 			//
 			BaseLogicUnit unit = (BaseLogicUnit) cell;
-			int pin = (camefromdir.ordinal() + unit.getRotation()) % 4;
+			int pin = (camefromdir.ordinal() + 2 + unit.getRotation()) % 4;
 			result.add(unit.getPin(pin));
 		}
 	}
@@ -149,18 +186,18 @@ public class Circuit {
 		int config = 0;
 		for (Direction d : dirs) {
 			switch (d) {
-			case NORTH:
-				config |= 1;
-				break;
-			case EAST:
-				config |= 2;
-				break;
-			case SOUTH:
-				config |= 4;
-				break;
-			case WEST:
-				config |= 8;
-				break;
+				case NORTH:
+					config |= 1;
+					break;
+				case EAST:
+					config |= 2;
+					break;
+				case SOUTH:
+					config |= 4;
+					break;
+				case WEST:
+					config |= 8;
+					break;
 			}
 		}
 		setWire(x, y, config);
@@ -168,10 +205,12 @@ public class Circuit {
 
 	public void setOutput(OutputUnit out) {
 		this.output = out;
+		rebuildComplexity = true;
 	}
 
 	public void setInput(InputUnit inp) {
 		this.input = inp;
+		rebuildComplexity = true;
 	}
 
 	public OutputUnit getOutput() {
@@ -186,6 +225,37 @@ public class Circuit {
 		for (Cell cell : cells)
 			if (cell != null && cell instanceof BaseLogicUnit)
 				((BaseLogicUnit) cell).initialiseInputPins(0.5f);
+	}
+
+	/**
+	 * Renumbers all the logic units, starting from 0. Only really useful if
+	 * you're displaying them, otherwise it's a waste of time
+	 * 
+	 */
+	public void renumber() {
+		int id = 0;
+		for (Cell c : cells)
+			if (c != null && c instanceof BaseLogicUnit)
+				((BaseLogicUnit) c).setId(++id);
+	}
+
+	/**
+	 * Returns a float between 0 and 1, 1 being the most complex circuit
+	 * possible. This trivial implementation simply counts the number of cells
+	 * in use and divides by the area of the grid
+	 * 
+	 * @return
+	 */
+	public float getComplexity() {
+		if (rebuildComplexity) {
+			rebuildComplexity = false;
+			int cnt = 0;
+			for (Cell c : cells)
+				if (c != null)
+					++cnt;
+			complexity = (float) cnt / (size * size);
+		}
+		return complexity;
 	}
 
 }

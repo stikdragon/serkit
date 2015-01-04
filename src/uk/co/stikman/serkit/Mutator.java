@@ -1,7 +1,11 @@
 package uk.co.stikman.serkit;
 
+import java.util.Random;
+
 public interface Mutator {
 
-	void mutate(Circuit c);
+	void mutate(Random rng, Circuit c, int amount);
+	
+	
 
 }

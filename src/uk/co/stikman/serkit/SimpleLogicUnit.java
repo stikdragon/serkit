@@ -56,6 +56,10 @@ public class SimpleLogicUnit extends BaseLogicUnit {
 		lookupTable[idx] = v;
 	}
 
+	public void setLookupValue(int idx, float v) {
+		lookupTable[idx] = v;
+	}
+
 	public float getLookupValue(boolean a, boolean b, boolean c) {
 		int idx = 0;
 		if (a)
@@ -67,13 +71,17 @@ public class SimpleLogicUnit extends BaseLogicUnit {
 		return lookupTable[idx];
 	}
 
+	public float getLookupValue(int idx) {
+		return lookupTable[idx];
+	}
+
 	@Override
 	public void clock() {
 		boolean a = getPin(0).getValue() > 0.5f;
-		boolean b = getPin(1).getValue() > 0.5f;
-		boolean c = getPin(2).getValue() > 0.5f;
+		boolean b = getPin(2).getValue() > 0.5f;
+		boolean c = getPin(3).getValue() > 0.5f;
 
-		getPin(3).setValue(getLookupValue(a, b, c));
+		getPin(1).setValue(getLookupValue(a, b, c));
 	}
 
 	public void toDNA(DNAOutput output) {
@@ -93,10 +101,17 @@ public class SimpleLogicUnit extends BaseLogicUnit {
 
 	@Override
 	public Cell createClone() {
-		SimpleLogicUnit slu = new SimpleLogicUnit(getRotation());
+		SimpleLogicUnit r = new SimpleLogicUnit();
+		r.copyFrom(this);
+		return r;
+	}
+
+	@Override
+	public void copyFrom(Cell src) {
+		super.copyFrom(src);
+		SimpleLogicUnit slu = (SimpleLogicUnit) src;
 		for (int i = 0; i < lookupTable.length; ++i)
-			slu.lookupTable[i] = lookupTable[i];
-		return slu;
+			lookupTable[i] = slu.lookupTable[i];
 	}
 
 }

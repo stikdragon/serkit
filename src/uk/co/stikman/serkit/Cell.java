@@ -31,5 +31,10 @@ public abstract class Cell {
 	public abstract String getCode();
 
 	public abstract Cell createClone();
+	
+	public void copyFrom(Cell src) {
+		this.x = src.x;
+		this.y = src.y;
+	}
 
 }

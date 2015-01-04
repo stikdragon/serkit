@@ -17,6 +17,10 @@ public class Wire extends Cell {
 		this.config = config;
 	}
 
+	public Wire() {
+		super();
+	}
+
 	private void setEast(boolean e) {
 		if (e)
 			config |= 2;
@@ -115,7 +119,16 @@ public class Wire extends Cell {
 
 	@Override
 	public Cell createClone() {
-		return new Wire(config);
+		Wire r = new Wire();
+		r.copyFrom(this);
+		return r;
+	}
+
+	@Override
+	public void copyFrom(Cell src) {
+		super.copyFrom(src);
+		Wire w = (Wire) src;
+		this.config = w.config;
 	}
 
 }

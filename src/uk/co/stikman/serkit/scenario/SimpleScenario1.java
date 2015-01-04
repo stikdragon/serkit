@@ -15,7 +15,7 @@ public class SimpleScenario1 implements Scenario {
 			float inp = (i % 2) == 0 ? 0 : 1;
 			c.getInput().setValue(inp);
 			sim.run();
-			float out = c.getOutput().getValue();
+			float out = 1.0f - c.getOutput().getValue();
 			float expected = inp;
 //			System.out.println(String.format("%f / %f", expected, out));
 			result += (1.0f - clamp(expected - out)) / ITERATIONS;

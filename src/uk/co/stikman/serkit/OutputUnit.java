@@ -22,12 +22,14 @@ public class OutputUnit extends BaseLogicUnit {
 
 	public float getValue() {
 //		return (getPin(0).getValue() + getPin(1).getValue() + getPin(2).getValue()) / 3.0f;
-		return getPin(1).getValue();
+		return getPin(3).getValue();
 	}
 
 	@Override
 	public Cell createClone() {
-		return new OutputUnit(getRotation());
+		OutputUnit r = new OutputUnit();
+		r.copyFrom(this);
+		return r;
 	}
 
 }
