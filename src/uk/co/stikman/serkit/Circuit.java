@@ -241,19 +241,24 @@ public class Circuit {
 
 	/**
 	 * Returns a float between 0 and 1, 1 being the most complex circuit
-	 * possible. This trivial implementation simply counts the number of cells
-	 * in use and divides by the area of the grid
+	 * possible. This trivial implementation simply weights each cell with a
+	 * value (3 for a gate, 1 for a wire) and divides by the max possible score
 	 * 
 	 * @return
 	 */
 	public float getComplexity() {
 		if (rebuildComplexity) {
 			rebuildComplexity = false;
-			int cnt = 0;
-			for (Cell c : cells)
-				if (c != null)
-					++cnt;
-			complexity = (float) cnt / (size * size);
+			int score = 0;
+			for (Cell c : cells) {
+				if (c != null) {
+					if (c instanceof Wire)
+						++score;
+					else
+						score += 3;
+				}
+			}
+			complexity = (float) score / (3 * size * size);
 		}
 		return complexity;
 	}

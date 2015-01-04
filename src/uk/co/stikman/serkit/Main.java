@@ -1,9 +1,11 @@
 package uk.co.stikman.serkit;
 
+import java.io.IOException;
 import java.util.Random;
 
 import uk.co.stikman.serkit.scenario.Scenario;
 import uk.co.stikman.serkit.scenario.SimpleScenario1;
+import uk.co.stikman.serkit.scenario.SimpleScenario2;
 
 public class Main {
 
@@ -11,19 +13,60 @@ public class Main {
 	private static final int	GENERATION_SIZE	= 50;
 
 	public static void main(String[] args) {
+		Main m = new Main();
+		try {
+			m.mainMenu();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	private int			seed		= 0;
+	private Scenario	scenario	= new SimpleScenario1();
+	private int			runtime		= 30000;
+
+	private void mainMenu() throws IOException {
+		System.out.println("Serkit");
+		System.out.println("======");
+		System.out.println("Choose option:");
+		System.out.println();
+		System.out.println("  1. Change seed (current=" + seed + ")");
+		System.out.println("  2. Change scenario (current=" + scenario.getClass().getSimpleName() + ")");
+		System.out.println("  3. Change runtime (current=" + runtime + "s)");
+		System.out.println("  R. Run");
+		System.out.println("  Q. Quit");
+
+		int ch;
+		while (true) {
+			ch = System.in.read();
+			ch = Character.toLowerCase(ch);
+			switch (ch) {
+				case 13:
+				case 10:
+					continue; 
+				case 'q':
+					return;
+				case 'r':
+					runSim(scenario);
+					break;
+				default:
+					System.err.println("Unknown: " + (char)ch);
+			}
+		}
+	}
+
+	private void runSim(Scenario scenario) {
 
 		Mutator mutator = new BasicMutator();
-		Scenario scenario = new SimpleScenario1();
 		Simulator sim = new Simulator();
 		Generation previous = new Generation();
 		Random rng = new Random(0);
 
 		//
-		// Make a few completely random ones to seed it
+		// Make a few completely random ones that are entirely gates
 		//
 		for (int i = 0; i < 5; ++i) {
-			Circuit c = new Circuit(SIZE);
-			mutator.mutate(rng, c, 100000);
+			Circuit c = createSeedCircuit(rng);
 			previous.add(c, 0.0f);
 			c.renumber();
 		}
@@ -32,7 +75,7 @@ public class Main {
 		long start = System.currentTimeMillis();
 		while (true) {
 			long d = System.currentTimeMillis();
-			if (d - start > 50000)
+			if (d - start > runtime)
 				break;
 
 			previous.sort(rng.nextInt(10) == 0);
@@ -40,7 +83,7 @@ public class Main {
 
 			++generationCount;
 			if (generationCount % 1000 == 0) {
-				System.out.println("Generation: " + generationCount + ".  Best: " + previous.get(0).getScore() + " / " +  previous.get(0).getCombinedScore());
+				System.out.println("Generation: " + generationCount + ".  Best: " + previous.get(0).getScore() + " / " + previous.get(0).getCombinedScore());
 				Circuit c = previous.get(0).getCircuit();
 				c.renumber();
 				System.out.println(c);
@@ -69,6 +112,20 @@ public class Main {
 			previous = current;
 
 		}
+	}
+
+	private static Circuit createSeedCircuit(Random rng) {
+		Circuit c = new Circuit(SIZE);
+		for (int x = 0; x < SIZE; ++x) {
+			for (int y = 0; y < SIZE; ++y) {
+				SimpleLogicUnit cell = new SimpleLogicUnit(rng.nextInt(4));
+				float[] lkp = cell.getLookupTable();
+				for (int i = 0; i < lkp.length; ++i)
+					lkp[i] = rng.nextFloat();
+				c.setCell(x, y, cell);
+			}
+		}
+		return c;
 	}
 
 }
