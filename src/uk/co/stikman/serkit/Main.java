@@ -26,31 +26,35 @@ public class Main {
 	private int			runtime		= 30000;
 
 	private void mainMenu() throws IOException {
-		System.out.println("Serkit");
-		System.out.println("======");
-		System.out.println("Choose option:");
-		System.out.println();
-		System.out.println("  1. Change seed (current=" + seed + ")");
-		System.out.println("  2. Change scenario (current=" + scenario.getClass().getSimpleName() + ")");
-		System.out.println("  3. Change runtime (current=" + runtime + "s)");
-		System.out.println("  R. Run");
-		System.out.println("  Q. Quit");
-
 		int ch;
+		boolean showmenu = true;
 		while (true) {
+			if (showmenu) {
+				System.out.println("Serkit");
+				System.out.println("======");
+				System.out.println("Choose option:");
+				System.out.println();
+				System.out.println("  1. Change seed (current=" + seed + ")");
+				System.out.println("  2. Change scenario (current=" + scenario.getClass().getSimpleName() + ")");
+				System.out.println("  3. Change runtime (current=" + runtime + "s)");
+				System.out.println("  R. Run");
+				System.out.println("  Q. Quit");
+			}
+			showmenu = true;
 			ch = System.in.read();
 			ch = Character.toLowerCase(ch);
 			switch (ch) {
 				case 13:
 				case 10:
-					continue; 
+					showmenu = false;
+					continue;
 				case 'q':
 					return;
 				case 'r':
 					runSim(scenario);
-					break;
+					continue;
 				default:
-					System.err.println("Unknown: " + (char)ch);
+					System.err.println("Unknown: " + (char) ch);
 			}
 		}
 	}
@@ -90,11 +94,15 @@ public class Main {
 			}
 
 			//
-			// Create a new generation from the best of the previous one
+			// Create a new generation from the best of the previous one, and add together
 			//
-			Generation current = new Generation();
+			Generation newGen = new Generation();
 			for (int i = 0; i < GENERATION_SIZE; ++i) {
 				Circuit c = new Circuit(previous.get(rng.nextInt(previous.size())).getCircuit());
+				if (rng.nextInt(25) == 0)
+					mutator.mutate(rng, c, 100);
+				if (rng.nextInt(100) == 0)
+					mutator.mutate(rng, c, 10000);
 				mutator.mutate(rng, c, 10);
 
 				InputUnit inp = new InputUnit();
@@ -106,10 +114,10 @@ public class Main {
 
 				sim.setCircuit(c);
 				float f = scenario.run(sim);
-				current.add(c, f);
+				newGen.add(c, f);
 			}
-
-			previous = current;
+			newGen.addAll(previous);
+			previous = newGen;
 
 		}
 	}

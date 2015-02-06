@@ -10,6 +10,7 @@ public class SimpleLogicUnit extends BaseLogicUnit {
 
 	private float[]					lookupTable	= new float[8];
 	private final static float[]	DEFAULT_LUT	= { 0, 1, 1, 1, 1, 1, 1, 1 };
+	private int inuseFlag = 1+2+4 + 8;
 
 	public SimpleLogicUnit() {
 		this(0);
@@ -23,17 +24,7 @@ public class SimpleLogicUnit extends BaseLogicUnit {
 		System.arraycopy(DEFAULT_LUT, 0, lookupTable, 0, lookupTable.length);
 	}
 
-	@Override
-	public String getCode() {
-		int n = getId();
-		if (n < 10)
-			return " " + n + " ";
-		if (n < 100)
-			return n + " ";
-		if (n < 1000)
-			return Integer.toString(n);
-		return "*!*";
-	}
+
 
 	public float[] getLookupTable() {
 		return lookupTable;
@@ -112,6 +103,16 @@ public class SimpleLogicUnit extends BaseLogicUnit {
 		SimpleLogicUnit slu = (SimpleLogicUnit) src;
 		for (int i = 0; i < lookupTable.length; ++i)
 			lookupTable[i] = slu.lookupTable[i];
+	}
+	
+	public boolean isPinConnected(int id) {
+		switch (id) {
+			case 0: return (inuseFlag & 0x1) == 0x1;
+			case 1: throw new RuntimeException("Output pin is always in use");
+			case 2: return (inuseFlag & 0x4) == 0x4; 
+			case 3: return (inuseFlag & 0x8) == 0x8;
+			default: throw new RuntimeException("Invalid pin: "+ id);
+		}
 	}
 
 }

@@ -62,5 +62,18 @@ public abstract class BaseLogicUnit extends Cell {
 	}
 	
 	
+	@Override
+	public String getCode() {
+		int n = getId();
+		if (n < 10)
+			return " " + n + " ";
+		if (n < 100)
+			return n + " ";
+		if (n < 1000)
+			return Integer.toString(n);
+		return "*!*";
+	}
+	
+	
 
 }

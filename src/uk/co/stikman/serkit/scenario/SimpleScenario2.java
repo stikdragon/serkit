@@ -18,9 +18,11 @@ public class SimpleScenario2 implements Scenario {
 
 			if (i >= STARTUP_TIME) {
 				float out = c.getOutput().getValue();
-				float expected = ((i % 2) == 0) ? 0.1f : 1;
-				//			System.out.println(String.format("%f / %f", expected, out));
-				result += (1.0f - clamp(expected - out)) / (ITERATIONS - STARTUP_TIME);
+				if (!Float.isNaN(out)) {
+					float expected = ((i % 2) == 0) ? 0.1f : 1;
+					//			System.out.println(String.format("%f / %f", expected, out));
+					result += (1.0f - clamp(expected - out)) / (ITERATIONS - STARTUP_TIME);
+				}
 			}
 		}
 		return result;

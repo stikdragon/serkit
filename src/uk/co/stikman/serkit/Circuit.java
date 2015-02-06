@@ -224,7 +224,7 @@ public class Circuit {
 	public void init() {
 		for (Cell cell : cells)
 			if (cell != null && cell instanceof BaseLogicUnit)
-				((BaseLogicUnit) cell).initialiseInputPins(0.5f);
+				((BaseLogicUnit) cell).initialiseInputPins(Float.NaN);
 	}
 
 	/**

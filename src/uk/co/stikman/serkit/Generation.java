@@ -36,7 +36,7 @@ public class Generation implements Iterable<Generation.Entry> {
 		 * @return
 		 */
 		public float getCombinedScore() {
-			return score - (0.2f * (1.0f - circuit.getComplexity()));
+			return score - (0.2f * circuit.getComplexity());
 		}
 
 		@Override
@@ -96,6 +96,11 @@ public class Generation implements Iterable<Generation.Entry> {
 	@Override
 	public String toString() {
 		return "Generation Size=" + entries.size() + " - [entries=" + entries + "]";
+	}
+
+	public void addAll(Generation g) {
+		for (Entry e : g.entries)
+			add(e.circuit, e.score);
 	}
 
 }

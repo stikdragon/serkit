@@ -51,6 +51,9 @@ public class Simulator {
 			}
 			if (count > 0)
 				val /= count;
+			else
+				val = Float.NaN; 
+			
 
 			for (CellPin pin : net)
 				if (!pin.isOutput())
