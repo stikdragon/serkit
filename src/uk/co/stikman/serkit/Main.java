@@ -1,5 +1,6 @@
 package uk.co.stikman.serkit;
 
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.Random;
 
@@ -24,6 +25,7 @@ public class Main {
 	private int			seed		= 0;
 	private Scenario	scenario	= new SimpleScenario1();
 	private int			runtime		= 30000;
+	private CircuitRenderer	renderer;
 
 	private void mainMenu() throws IOException {
 		int ch;
@@ -91,6 +93,7 @@ public class Main {
 				Circuit c = previous.get(0).getCircuit();
 				c.renumber();
 				System.out.println(c);
+				drawCircuit(c, "gen" + generationCount + ".png");
 			}
 
 			//
@@ -120,6 +123,17 @@ public class Main {
 			previous = newGen;
 
 		}
+	}
+
+	private void drawCircuit(Circuit c, String filename) {
+		CircuitRenderer render = getRenderer();
+		render.render(c, filename);
+	}
+
+	private CircuitRenderer getRenderer() {
+		if (renderer == null)
+			renderer = new CircuitRenderer();
+		return renderer;
 	}
 
 	private static Circuit createSeedCircuit(Random rng) {
