@@ -6,7 +6,7 @@ import uk.co.stikman.serkit.Simulator;
 public class SimpleScenario1 implements Scenario {
 
 	private static final int	ITERATIONS		= 20;
-	private static final int	STARTUP_TIME	= 10;
+	private static final int	STARTUP_TIME	= 2;
 
 	@Override
 	public float run(Simulator sim) {

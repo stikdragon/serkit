@@ -59,6 +59,7 @@ public abstract class BaseLogicUnit extends Cell {
 		super.copyFrom(src);
 		BaseLogicUnit blu = (BaseLogicUnit) src;
 		this.id = blu.id;
+		this.rotation = blu.rotation;
 	}
 	
 	

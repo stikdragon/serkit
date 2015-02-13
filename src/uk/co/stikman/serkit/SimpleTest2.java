@@ -20,7 +20,7 @@ public class SimpleTest2 {
 
 		Netlist nl = c.buildNetlist();
 		System.out.println(nl.toString());
-		for (BaseLogicUnit used : nl.getActiveCells())
+		for (Cell used : nl.getActiveCells())
 			System.out.println(used.getCode());
 
 		Scenario scenario = new SimpleScenario1();

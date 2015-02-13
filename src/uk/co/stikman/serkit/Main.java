@@ -4,6 +4,7 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.Random;
 
+import uk.co.stikman.serkit.Simulation.HistoryEntry;
 import uk.co.stikman.serkit.scenario.Scenario;
 import uk.co.stikman.serkit.scenario.SimpleScenario1;
 import uk.co.stikman.serkit.scenario.SimpleScenario2;
@@ -22,9 +23,10 @@ public class Main {
 		}
 	}
 
-	private int			seed		= 0;
-	private Scenario	scenario	= new SimpleScenario1();
-	private int			runtime		= 30000;
+	private int				seed		= 0;
+	private Scenario		scenario	= new SimpleScenario1();
+	private int				runtime		= 30000;
+
 	private CircuitRenderer	renderer;
 
 	private void mainMenu() throws IOException {
@@ -46,108 +48,79 @@ public class Main {
 			ch = System.in.read();
 			ch = Character.toLowerCase(ch);
 			switch (ch) {
-				case 13:
-				case 10:
-					showmenu = false;
-					continue;
-				case 'q':
-					return;
-				case 'r':
-					runSim(scenario);
-					continue;
-				default:
-					System.err.println("Unknown: " + (char) ch);
+			case 13:
+			case 10:
+				showmenu = false;
+				continue;
+			case 'q':
+				return;
+			case 'r':
+				runSim(scenario);
+				continue;
+			default:
+				System.err.println("Unknown: " + (char) ch);
 			}
 		}
 	}
 
 	private void runSim(Scenario scenario) {
+		final Simulation sim = new Simulation();
+		sim.setSeed(seed);
+		sim.setScenario(scenario);
+		sim.setRuntime(runtime);
+		sim.setSize(7);
+		sim.setGenerationSize(50);
+		sim.setHistorySkip(1000);
 
-		Mutator mutator = new BasicMutator();
-		Simulator sim = new Simulator();
-		Generation previous = new Generation();
-		Random rng = new Random(0);
+		Thread t = new Thread(new Runnable() {
+			@Override
+			public void run() {
+				sim.run();
+			}
+		});
+		t.start();
 
 		//
-		// Make a few completely random ones that are entirely gates
+		// Run for 30s, print out the current head of the history queue
+		// every 1s
 		//
-		for (int i = 0; i < 5; ++i) {
-			Circuit c = createSeedCircuit(rng);
-			previous.add(c, 0.0f);
-			c.renumber();
-		}
+		long time = 30000;
+		long lastT = System.currentTimeMillis();
+		while (time > 0) {
+			long dt = System.currentTimeMillis() - lastT;
+			time -= dt;
 
-		int generationCount = 0;
-		long start = System.currentTimeMillis();
-		while (true) {
-			long d = System.currentTimeMillis();
-			if (d - start > runtime)
-				break;
-
-			previous.sort(rng.nextInt(10) == 0);
-			previous.keep(2 + rng.nextInt(4));
-
-			++generationCount;
-			if (generationCount % 1000 == 0) {
-				System.out.println("Generation: " + generationCount + ".  Best: " + previous.get(0).getScore() + " / " + previous.get(0).getCombinedScore());
-				Circuit c = previous.get(0).getCircuit();
-				c.renumber();
-				System.out.println(c);
-				drawCircuit(c, "gen" + generationCount + ".png");
+			try {
+				Thread.sleep(1000);
+			} catch (InterruptedException e) {
 			}
 
-			//
-			// Create a new generation from the best of the previous one, and add together
-			//
-			Generation newGen = new Generation();
-			for (int i = 0; i < GENERATION_SIZE; ++i) {
-				Circuit c = new Circuit(previous.get(rng.nextInt(previous.size())).getCircuit());
-				if (rng.nextInt(25) == 0)
-					mutator.mutate(rng, c, 100);
-				if (rng.nextInt(100) == 0)
-					mutator.mutate(rng, c, 10000);
-				mutator.mutate(rng, c, 10);
-
-				InputUnit inp = new InputUnit();
-				OutputUnit out = new OutputUnit(0);
-				c.setCell(SIZE - 1, SIZE / 2, out);
-				c.setCell(0, SIZE / 2, inp);
-				c.setInput(inp);
-				c.setOutput(out);
-
-				sim.setCircuit(c);
-				float f = scenario.run(sim);
-				newGen.add(c, f);
+			int generationCount = sim.getGenerationCount();
+			HistoryEntry c = null;
+			synchronized (sim.getHistory()) {
+				if (!sim.getHistory().isEmpty())
+					c = sim.getHistory().get(sim.getHistory().size() - 1);
 			}
-			newGen.addAll(previous);
-			previous = newGen;
-
+			if (c != null) {
+				System.out.println("Generation: " + generationCount + ".  Best: " + c.getScore() + " / " + c.getCombinedScore());
+				c.getCircuit().renumber();
+				System.out.println(c.getCircuit());
+				drawCircuit(c.getCircuit(), "gen" + generationCount + ".png");
+			}
 		}
+
+		sim.stop();
 	}
 
 	private void drawCircuit(Circuit c, String filename) {
 		CircuitRenderer render = getRenderer();
-		render.render(c, filename);
+		render.render(c, "rendered\\" + filename);
 	}
 
 	private CircuitRenderer getRenderer() {
 		if (renderer == null)
 			renderer = new CircuitRenderer();
 		return renderer;
-	}
-
-	private static Circuit createSeedCircuit(Random rng) {
-		Circuit c = new Circuit(SIZE);
-		for (int x = 0; x < SIZE; ++x) {
-			for (int y = 0; y < SIZE; ++y) {
-				SimpleLogicUnit cell = new SimpleLogicUnit(rng.nextInt(4));
-				float[] lkp = cell.getLookupTable();
-				for (int i = 0; i < lkp.length; ++i)
-					lkp[i] = rng.nextFloat();
-				c.setCell(x, y, cell);
-			}
-		}
-		return c;
 	}
 
 }

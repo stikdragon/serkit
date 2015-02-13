@@ -6,11 +6,11 @@ import java.util.List;
 
 import javax.security.auth.login.LoginContext;
 
-public class Netlist implements Iterable<List<CellPin>> {
+public class Netlist implements Iterable<NetlistPath> {
 
 	private Circuit				circuit;
-	private List<List<CellPin>>	lists		= new ArrayList<>();
-	private List<BaseLogicUnit>	activeCells	= new ArrayList<>();
+	private List<NetlistPath>	lists		= new ArrayList<>();
+	private List<Cell>	activeCells	= new ArrayList<>();
 
 	public Netlist(Circuit circuit) {
 		this.circuit = circuit;
@@ -20,23 +20,23 @@ public class Netlist implements Iterable<List<CellPin>> {
 		return circuit;
 	}
 
-	public void addList(List<CellPin> list) {
+	public void addList(NetlistPath list) {
 		lists.add(list);
 	}
 
-	public List<List<CellPin>> getLists() {
+	public List<NetlistPath> getLists() {
 		return lists;
 	}
 
 	@Override
-	public Iterator<List<CellPin>> iterator() {
+	public Iterator<NetlistPath> iterator() {
 		return lists.iterator();
 	}
 
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
-		for (List<CellPin> l : this) {
+		for (NetlistPath l : this) {
 			String sep = "";
 			for (CellPin pin : l) {
 				sb.append(sep).append(pin.toString());
@@ -47,11 +47,11 @@ public class Netlist implements Iterable<List<CellPin>> {
 		return sb.toString();
 	}
 
-	public void setActiveCells(List<BaseLogicUnit> list) {
+	public void setActiveCells(List<Cell> list) {
 		this.activeCells = list;
 	}
 
-	public List<BaseLogicUnit> getActiveCells() {
+	public List<Cell> getActiveCells() {
 		return activeCells;
 	}
 

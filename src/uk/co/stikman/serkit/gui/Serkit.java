@@ -1,47 +1,57 @@
 package uk.co.stikman.serkit.gui;
 
 import javafx.application.Application;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
-import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.text.Font;
-import javafx.scene.text.FontWeight;
-import javafx.scene.text.Text;
+import javafx.application.Platform;
 import javafx.stage.Stage;
+import uk.co.stikman.serkit.gui.event.QuitEvent;
+import uk.co.stikman.serkit.gui.event.StartStopEvent;
+
+import com.google.common.eventbus.Subscribe;
 
 public class Serkit extends Application {
 	public static void main(String[] args) {
 		launch(args);
 	}
 
+	private Stage				mainStage;
+	private SimulationThread	runner;
+
 	@Override
 	public void start(final Stage primaryStage) throws Exception {
+		mainStage = primaryStage;
 		primaryStage.setTitle("Serkit");
+		final MainWindow wnd = new MainWindow("MainWnd.fxml");
+		wnd.go(primaryStage);
 
-		BorderPane border = new BorderPane();
+		runner = new SimulationThread() {
 
-		Text title = new Text("Serkit");
-		title.setFont(Font.font("Arial", FontWeight.BOLD, 14));
-		border.setTop(title);
-
-		Button btn = new Button();
-		btn.setText("Quit");
-		btn.setOnAction(new EventHandler<ActionEvent>() {
 			@Override
-			public void handle(ActionEvent event) {
-				try {
-					primaryStage.close();
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
+			protected void log(final String msg) {
+				Platform.runLater(new Runnable() {
+					@Override
+					public void run() {
+						wnd.addLogMessage(msg);
+					}
+				});
 			}
-		});
-		border.setBottom(btn);
-
-		primaryStage.setScene(new Scene(border, 300, 250));
-		primaryStage.show();
+		};
+		runner.setDaemon(true);
+		runner.start();
+		
+		bind();
 	}
 
+	private void bind() {
+		AppEventBus.get().register(this);
+	}
+
+	@Subscribe
+	public void quitEvent(QuitEvent e) {
+		mainStage.close();
+	}
+
+	@Subscribe
+	public void startStopEvent(StartStopEvent e) {
+		runner.setPaused(!e.isStart());
+	}
 }

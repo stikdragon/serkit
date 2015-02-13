@@ -77,7 +77,7 @@ public class Circuit {
 
 		while (!open.isEmpty()) {
 			Wire cur = open.iterator().next();
-			List<CellPin> list = new ArrayList<>();
+			NetlistPath list = new NetlistPath();
 			follow(open, cur, list, null);
 			res.addList(list);
 		}
@@ -95,23 +95,23 @@ public class Circuit {
 			int dx = 0;
 			int dy = 0;
 			switch (blu.getRotation()) {
-				case 0:
-					dx = 1;
-					break;
-				case 1:
-					dy = 1;
-					break;
-				case 2:
-					dx = -1;
-					break;
-				case 3:
-					dy = -1;
-					break;
+			case 0:
+				dx = 1;
+				break;
+			case 1:
+				dy = 1;
+				break;
+			case 2:
+				dx = -1;
+				break;
+			case 3:
+				dy = -1;
+				break;
 			}
 			Cell c2 = getCell(c.getX() + dx, c.getY() + dy);
 			if (c2 != null && c2 instanceof BaseLogicUnit) {
 				BaseLogicUnit blu2 = (BaseLogicUnit) c2;
-				List<CellPin> list = new ArrayList<CellPin>();
+				NetlistPath list = new NetlistPath();
 				list.add(blu.getPin(1));
 				list.add(blu2.getPin((blu.getRotation() + 3 + blu2.getRotation()) % 4));
 				res.addList(list);
@@ -124,22 +124,32 @@ public class Circuit {
 		// TODO: we can improve this so that only things that are connected to the 
 		// output somehow are considered
 		//
-		Set<BaseLogicUnit> used = new HashSet<>();
-		for (List<CellPin> list : res)
-			for (CellPin pin : list)
-				if (pin.isOutput())
+		Set<Cell> used = new HashSet<>();
+		for (NetlistPath list : res) {
+			boolean b = false;
+			for (CellPin pin : list) {
+				if (pin.isOutput()) {
 					used.add(pin.getCell());
-		res.setActiveCells(new ArrayList<BaseLogicUnit>(used));
+					b = true;
+				}
+			}
+			if (b)
+				for (Wire w : list.getWires())
+					used.add(w);
+
+		}
+		res.setActiveCells(new ArrayList<Cell>(used));
 		return res;
 	}
 
-	private void follow(Set<Wire> open, Cell cell, List<CellPin> result, Direction camefromdir) {
+	private void follow(Set<Wire> open, Cell cell, NetlistPath result, Direction camefromdir) {
 		if (cell == null)
 			return;// empty cell
 		if (cell instanceof Wire) {
 			Wire wire = (Wire) cell;
 			if (!open.contains(wire)) // been here before
 				return;
+			result.addWire(wire);
 			open.remove(wire);
 			if (wire.isNorth())
 				follow(open, getCell(wire.getX(), wire.getY() - 1), result, Direction.NORTH);
@@ -186,18 +196,18 @@ public class Circuit {
 		int config = 0;
 		for (Direction d : dirs) {
 			switch (d) {
-				case NORTH:
-					config |= 1;
-					break;
-				case EAST:
-					config |= 2;
-					break;
-				case SOUTH:
-					config |= 4;
-					break;
-				case WEST:
-					config |= 8;
-					break;
+			case NORTH:
+				config |= 1;
+				break;
+			case EAST:
+				config |= 2;
+				break;
+			case SOUTH:
+				config |= 4;
+				break;
+			case WEST:
+				config |= 8;
+				break;
 			}
 		}
 		setWire(x, y, config);
